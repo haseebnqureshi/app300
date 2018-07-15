@@ -9,7 +9,7 @@ Looking to start a new application locally, fresh code and fresh start.
 git clone https://github.com/haseebnqureshi/app300.git ./MyApp
 cd MyApp
 vagrant up
-vagrant ssh
+vagrant ssh (then vagrant as its password)
 bash quickstart.sh
 ```
 
@@ -49,7 +49,7 @@ Gone through and created your app300 application, now deploying onto AWS.
 ```
 cd MyApp
 vagrant up
-vagrant ssh
+vagrant ssh (then vagrant as its password)
 bash deploy.sh
 ```
 
@@ -80,7 +80,7 @@ Need to clean up environments.
 ```
 cd MyApp
 vagrant up
-vagrant ssh
+vagrant ssh (then vagrant as its password)
 bash environments.sh
 ```
 
