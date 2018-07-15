@@ -92,7 +92,11 @@ Vagrant.configure("2") do |config|
 
   config.vm.provision "shell", inline: <<-SHELL
     sudo su
-    bash Vagrant.sh
+    cd _app300
+      bash ubuntu.sh
+      npm install 
+      bash rethinkdb.sh
+    cd ..
     exit
   SHELL
 
