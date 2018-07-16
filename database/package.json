@@ -12,8 +12,7 @@
   },
   "dependencies": {
     "aws-sdk": "^2.275.1",
-    "chalk": "^2.4.1",
-    "inquirer": "^6.0.0",
-    "rethinkdb": "^2.3.3"
+    "dotenv": "^6.0.0",
+    "moment": "^2.22.2"
   }
 }

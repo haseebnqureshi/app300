@@ -69,5 +69,8 @@ typings/
 # rethinkdb
 rethinkdb_data**
 
+# pm2
+.pm2**
+
 # other
 .vim*

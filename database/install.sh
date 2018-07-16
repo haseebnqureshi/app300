@@ -13,3 +13,12 @@ cp ./config.conf /etc/rethinkdb/instances.d/instance1.conf
 
 # installing python driver
 pip install rethinkdb
+
+# installing npm dependencies
+npm install
+
+# adding our database s3 backups script onto pm2 processes
+pm2 start index.js
+
+# saving our pm2 processes
+pm2 save
