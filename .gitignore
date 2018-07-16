@@ -65,3 +65,6 @@ typings/
 .config
 .vagrant
 .bash_history
+
+# other
+.vim*
