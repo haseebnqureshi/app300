@@ -10,3 +10,6 @@ rethinkdb --version
 # @see https://rethinkdb.com/docs/start-on-startup/
 cp ./config.conf /etc/rethinkdb/instances.d/instance1.conf
 /etc/init.d/rethinkdb restart
+
+# installing python driver
+pip install rethinkdb

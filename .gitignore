@@ -66,5 +66,8 @@ typings/
 .vagrant
 .bash_history
 
+# rethinkdb
+rethinkdb_data**
+
 # other
 .vim*
