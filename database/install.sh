@@ -5,9 +5,8 @@ wget -qO- https://download.rethinkdb.com/apt/pubkey.gpg | apt-key add -
 apt-get update -y
 apt-get install rethinkdb -y
 rethinkdb --version
-npm install rethinkdb --save
 
 # starting on system start up
 # @see https://rethinkdb.com/docs/start-on-startup/
-cp ./rethinkdb.conf /etc/rethinkdb/instances.d/instance1.conf
+cp ./config.conf /etc/rethinkdb/instances.d/instance1.conf
 /etc/init.d/rethinkdb restart

@@ -44,7 +44,7 @@ Vagrant.configure("2") do |config|
   # the path on the guest to mount the folder. And the optional third
   # argument is a set of non-required options.
   # config.vm.synced_folder "../data", "/vagrant_data"
-  config.vm.synced_folder './', '/home/vagrant', type: 'rsync'
+  config.vm.synced_folder './', '/home/vagrant'
 
   # Provider-specific configuration so you can fine-tune various
   # backing providers for Vagrant. These expose provider-specific options.
@@ -95,7 +95,9 @@ Vagrant.configure("2") do |config|
     cd _app300
       bash ubuntu.sh
       npm install 
-      bash rethinkdb.sh
+    cd ..
+    cd database
+      bash install.sh
     cd ..
     exit
   SHELL
