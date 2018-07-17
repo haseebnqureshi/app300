@@ -30,12 +30,6 @@ var _ = require('underscore');
 
 fs.ensureFileSync(path.resolve(__dirname, '.env'));
 
-var filepath = path.resolve(__dirname, 'rethinkdb.tar.gz');
-
-var timestamp = moment().format();
-
-var key = `database/rethinkdb_${timestamp}.tar.gz`;
-
 aws.config.update({ 
 	accessKeyId: process.env.AWS_ACCESS_KEY,
 	secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
@@ -44,45 +38,140 @@ aws.config.update({
 var s3 = new aws.S3();
 
 
-/* HELPER FUNCTIONS */
+/* EXPORTS */
 
-var dump = function(callback) {
-	exec(`rethinkdb dump --file ${filepath}`, function(err, stdout, stderr) {
-		if (callback) { 
-			callback(err, stdout, stderr);
-		}
-	});
-};
+module.exports = {
 
-var upload = function(callback) {
-	var contents = fs.readFileSync(filepath, 'utf8');
-	var body = new Buffer(contents, 'binary');
-	s3.putObject({
-		Bucket: process.env.S3_BUCKET_NAME,
-		Key: key,
-		Body: body,
-		ACL: 'private'
-	}, function(err, data) {
-		if (callback) {
-			callback(err, data);
-		}
-	});
-};
+	dumpFilepath: path.resolve(__dirname, 'rethinkdb.tar.gz'),
 
+	info: require(path.resolve(__dirname, 'package.json')),
 
-/* START SCHEDULING & UPLOAD FIRST */
+	restoreFilepath: path.resolve(__dirname, 's3-rethinkdb.tar.gz'),
 
-if (!process.env.AWS_ACCESS_KEY || !process.env.AWS_SECRET_ACCESS_KEY || !process.env.S3_BUCKET_NAME) {
-	console.error('app300-database: Missing AWS credentials and or S3 bucket name!');
-}
-else {
-	dump(function() {
-		upload();
-	});
+	s3Acl: 'private',
 
-	scheduler.scheduleJob(process.env.S3_BACKUP_SCHEDULE || '* 0 * * *', function() {
-		dump(function() {
-			upload();
+	s3Marker: 'database/',
+
+	timestamp: moment().format(),
+
+	download: function(Key, callback) {
+		if (this.noCredentials()) { return; }
+		var that = this;
+		s3.getObject({
+			Bucket: process.env.S3_BUCKET_NAME,
+			Key
+		}, function(err, data) {
+			if (err) {
+				console.error(err);
+			}
+			else {
+				fs.writeFileSync(that.restoreFilepath, data.Body.toString('binary'));
+			}
+			if (callback) {
+				callback(err, data);
+			}
 		});
-	});
-}
+	},
+
+	dump: function(callback) {
+		exec(`rethinkdb dump --file ${this.dumpFilepath} --overwrite-file`, function(err, stdout, stderr) {
+			if (err) {
+				console.error(err);
+			}		
+			if (callback) { 
+				callback(err, stdout, stderr);
+			}
+		});
+	},
+
+	initialDump: function(callback) {
+		if (this.noCredentials()) { return; }
+		var that = this;
+		this.dump(function() {
+			that.upload(function() {
+				if (callback) {
+					callback();
+				}
+			});
+		});
+	},
+
+	noCredentials: function() {
+		if (!process.env.AWS_ACCESS_KEY || !process.env.AWS_SECRET_ACCESS_KEY || !process.env.S3_BUCKET_NAME) {
+			console.error('app300-database: Missing AWS credentials and or S3 bucket name!');
+			return true;
+		}
+		return false;
+	},
+
+	noRestoreFile: function() {
+		if (!fs.pathExistsSync(this.restoreFilepath)) {
+			console.error('no file to restore! moving on...');
+			return true;
+		}
+		return false;
+	},
+
+	periodicDump: function() {
+		var that = this;
+		if (this.noCredentials()) { return; }
+		scheduler.scheduleJob(process.env.S3_BACKUP_SCHEDULE || '* 0 * * *', function() {
+			that.dump(function() {
+				that.upload();
+			});
+		});
+	},
+
+	restore: function(callback) {
+		if (this.noRestoreFile()) { return; }
+		exec(`rethinkdb restore ${this.restoreFilepath}`, function(err, stdout, stderr) {
+			if (err) {
+				console.error(err);
+			}
+			if (callback) { 
+				callback(err, stdout, stderr);
+			}
+		});
+	},
+
+	s3Key: function() {
+		return `${this.s3Marker}rethinkdb_${this.timestamp}.tar.gz`;
+	},
+
+	scan: function(callback) {
+		if (this.noCredentials()) { return; }
+		s3.listObjects({
+			Bucket: process.env.S3_BUCKET_NAME,
+			Marker: this.s3Marker
+		}, function(err, data) {
+			if (err) {
+				console.error(err);
+			}
+			if (callback) {
+				callback(err, data);
+			}
+		});
+	},
+
+	upload: function(callback) {
+		if (this.noCredentials()) { return; }
+		var contents = fs.readFileSync(this.dumpFilepath);
+		var body = new Buffer(contents, 'binary');
+		s3.putObject({
+			Bucket: process.env.S3_BUCKET_NAME,
+			Key: this.s3Key(),
+			Body: body,
+			ACL: this.s3Acl
+		}, function(err, data) {
+			if (err) {
+				console.error(err);
+			}
+			if (callback) {
+				callback(err, data);
+			}
+		});
+	}
+
+};
+
+
