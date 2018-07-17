@@ -1,0 +1,12 @@
+{
+  "name": "api",
+  "version": "1.0.0",
+  "description": "API from App300 framework",
+  "main": "index.js",
+  "scripts": {},
+  "bin": {},
+  "author": "",
+  "license": "",
+  "repository": {},
+  "dependencies": {}
+}

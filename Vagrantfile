@@ -92,13 +92,20 @@ Vagrant.configure("2") do |config|
 
   config.vm.provision "shell", inline: <<-SHELL
     sudo su
-    cd _app300
+   
+    cd _framework
       bash ubuntu.sh
       npm install 
     cd ..
-    cd database
+    
+    cd database/_framework
       bash install.sh
-    cd ..
+    cd ../..
+
+    cd api/_framework
+      bash install.sh
+    cd ../..
+    
     exit
   SHELL
 

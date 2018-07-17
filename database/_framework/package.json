@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {},
   "bin": {
-    "s3-database-restore": "./restore.js"
+    "s3-restore-db": "./restore.js"
   },
   "author": "Haseeb Qureshi",
   "license": "MIT",

@@ -9,15 +9,13 @@ S3_BACKUP_SCHEDULE = * 0 * * *
 S3_BUCKET_NAME = 
 */
 
-require('dotenv').config();
+var fs = require('fs-extra');
 
 var path = require('path');
 
 var exec = require('child_process').exec;
 
 var moment = require('moment');
-
-var fs = require('fs-extra');
 
 var scheduler = require('node-schedule');
 
@@ -28,7 +26,11 @@ var _ = require('underscore');
 
 /* CONFIG & INITIAL VARS */
 
-fs.ensureFileSync(path.resolve(__dirname, '.env'));
+var envPath = path.resolve(__dirname, '..', '.env');
+
+fs.ensureFileSync(envPath);
+
+require('dotenv').config({ path: envPath });
 
 aws.config.update({ 
 	accessKeyId: process.env.AWS_ACCESS_KEY,
@@ -42,11 +44,11 @@ var s3 = new aws.S3();
 
 module.exports = {
 
-	dumpFilepath: path.resolve(__dirname, 'rethinkdb.tar.gz'),
+	dumpFilepath: path.resolve(__dirname, '..', 'rethinkdb.tar.gz'),
 
 	info: require(path.resolve(__dirname, 'package.json')),
 
-	restoreFilepath: path.resolve(__dirname, 's3-rethinkdb.tar.gz'),
+	restoreFilepath: path.resolve(__dirname, '..', 's3-rethinkdb.tar.gz'),
 
 	s3Acl: 'private',
 

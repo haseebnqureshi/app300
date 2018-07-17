@@ -21,7 +21,7 @@ npm install
 npm link
 
 # adding our database s3 backups script onto pm2 processes
-pm2 start dump.js
+pm2 start dump.js --name db-backups
 
 # saving our pm2 processes
 pm2 save
