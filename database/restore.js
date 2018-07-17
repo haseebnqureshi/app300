@@ -28,8 +28,8 @@ var prompt = function(objects) {
 		{
 			type: 'list',
 			name: 'key',
-			message: `Which S3 database backup would you like to restore? (${objects.length})`,
-			choices: _.map(objects, function(obj) {
+			message: `Which S3 database backup would you like to restore? (${objects.length} found, recent -> oldest)`,
+			choices: _.map(objects.reverse(), function(obj) {
 				return obj.Key;
 			})
 		}

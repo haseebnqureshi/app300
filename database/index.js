@@ -65,7 +65,7 @@ module.exports = {
 				console.error(err);
 			}
 			else {
-				fs.writeFileSync(that.restoreFilepath, data.Body.toString('binary'));
+				fs.writeFileSync(that.restoreFilepath, data.Body);
 			}
 			if (callback) {
 				callback(err, data);
@@ -124,7 +124,7 @@ module.exports = {
 
 	restore: function(callback) {
 		if (this.noRestoreFile()) { return; }
-		exec(`rethinkdb restore ${this.restoreFilepath}`, function(err, stdout, stderr) {
+		exec(`rethinkdb restore ${this.restoreFilepath} --force`, function(err, stdout, stderr) {
 			if (err) {
 				console.error(err);
 			}
