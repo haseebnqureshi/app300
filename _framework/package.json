@@ -10,5 +10,11 @@
     "type": "git",
     "url": "git+https://github.com/haseebnqureshi/app300.git"
   },
-  "dependencies": {}
+  "dependencies": {
+    "aws-sdk": "^2.276.1",
+    "dotenv": "^6.0.0",
+    "fs-extra": "^7.0.0",
+    "moment": "^2.22.2",
+    "underscore": "^1.9.1"
+  }
 }
