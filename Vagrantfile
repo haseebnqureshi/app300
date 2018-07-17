@@ -106,6 +106,10 @@ Vagrant.configure("2") do |config|
       bash install.sh
     cd ../..
     
+    cd app/_framework
+      bash install.sh
+    cd ../..
+    
     exit
   SHELL
 

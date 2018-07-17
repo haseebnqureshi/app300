@@ -1,0 +1,18 @@
+{
+  "name": "app300-app",
+  "version": "1.0.0",
+  "description": "Easily creating an application in under 5 minutes (or 300 seconds). Uses Vagrant and the AWS SDK to create and deploy a fully functioning application that is well architected, easily maintainable, and adheres to the twelve factor application.",
+  "main": "index.js",
+  "scripts": {},
+  "bin": {},
+  "author": "Haseeb Qureshi",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/haseebnqureshi/app300.git"
+  },
+  "dependencies": {
+    "dotenv": "^6.0.0",
+    "fs-extra": "^7.0.0"
+  }
+}
