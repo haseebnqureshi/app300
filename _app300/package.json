@@ -10,10 +10,5 @@
     "type": "git",
     "url": "git+https://github.com/haseebnqureshi/app300.git"
   },
-  "dependencies": {
-    "aws-sdk": "^2.275.1",
-    "chalk": "^2.4.1",
-    "inquirer": "^6.0.0",
-    "rethinkdb": "^2.3.3"
-  }
+  "dependencies": {}
 }
