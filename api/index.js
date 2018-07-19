@@ -2,8 +2,22 @@
 
 var framework = require('./_framework');
 
-var i = 0;
-setInterval(function() {
-	console.log('api', i);
-	i++
-}, 10 * 1000);
+var app = framework.app;
+
+app.config();
+
+app.get('/', function(req, res) {
+	var appInfo = app.info;
+	var frameworkInfo = app.framework;
+	res.status(200).send({ appInfo, frameworkInfo });
+});
+
+app.db.connect(function(err) {
+
+	app.easyCrud('users');
+
+	app.easyCrud('items');
+
+});
+
+app.run();

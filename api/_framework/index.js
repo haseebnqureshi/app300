@@ -3,21 +3,27 @@
 /*
 .env variables
 
+process.env.R_HOST
+process.env.R_PORT
+process.env.R_DATABASE || 'test'
+process.env.EXPRESS_PORT
 */
 
 var fs = require('fs-extra');
 
 var path = require('path');
 
-// var exec = require('child_process').exec;
+var moment = require('moment');
 
-// var moment = require('moment');
+var _ = require('underscore');
 
-// var scheduler = require('node-schedule');
+var express = require('express');
 
-// var aws = require('aws-sdk');
+var app = express();
 
-// var _ = require('underscore');
+var r = require('rethinkdb');
+
+var bodyParser = require('body-parser');
 
 
 /* CONFIG & INITIAL VARS */
@@ -28,148 +34,284 @@ fs.ensureFileSync(envPath);
 
 require('dotenv').config({ path: envPath });
 
-// aws.config.update({ 
-// 	accessKeyId: process.env.AWS_ACCESS_KEY,
-// 	secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
-// });
 
-// var s3 = new aws.S3();
+
+
+
+
+
+
 
 
 /* EXPORTS */
 
-module.exports = {
+app.framework = require(path.resolve(__dirname, 'package.json'));
 
-	// dumpFilepath: path.resolve(__dirname, '..', 'rethinkdb.tar.gz'),
+app.info = require(path.resolve(__dirname, '..', 'package.json'));
 
-	info: require(path.resolve(__dirname, 'package.json')),
+app.db = {
 
-	// restoreFilepath: path.resolve(__dirname, '..', 's3-rethinkdb.tar.gz'),
+	/*
+	please refer to the rethinkdb documentation. for convenience, here 
+	are a few easy links:
 
-	// s3Acl: 'private',
+	@see https://rethinkdb.com/docs/cookbook/javascript/
+	@see https://rethinkdb.com/api/javascript/
 
-	// s3Marker: 'database/',
+	it's good and okay to use these methods when quickly starting out.
+	but for projects that will continue in time, highly recommend using
+	the actual rethink methods and queries, directly in your data 
+	modeling. 
 
-	// timestamp: moment().format(),
+	that will allow for the greatest maintainability and stability
+	for your app, without "black-boxing" some essential data logic.
+	*/
 
-	// download: function(Key, callback) {
-	// 	if (this.noCredentials()) { return; }
-	// 	var that = this;
-	// 	s3.getObject({
-	// 		Bucket: process.env.S3_BUCKET_NAME,
-	// 		Key
-	// 	}, function(err, data) {
-	// 		if (err) {
-	// 			console.error(err);
-	// 		}
-	// 		else {
-	// 			fs.writeFileSync(that.restoreFilepath, data.Body);
-	// 		}
-	// 		if (callback) {
-	// 			callback(err, data);
-	// 		}
-	// 	});
-	// },
+	connection: null,
 
-	// dump: function(callback) {
-	// 	exec(`rethinkdb dump --file ${this.dumpFilepath} --overwrite-file`, function(err, stdout, stderr) {
-	// 		if (err) {
-	// 			console.error(err);
-	// 		}		
-	// 		if (callback) { 
-	// 			callback(err, stdout, stderr);
-	// 		}
-	// 	});
-	// },
+	all: function(table, callback) {
+		r.table(table)
+		  .run(this.connection, function(err, cursor) {
+			if (err) {
+				console.error(err);
+				callback(err, null);
+				return;
+			}
+			cursor.toArray(function(err, result) {
+				if (err) {
+					console.error(err);
+				}
+				callback(err, result);
+			});
+		});
+	},
 
-	// initialDump: function(callback) {
-	// 	if (this.noCredentials()) { return; }
-	// 	var that = this;
-	// 	this.dump(function() {
-	// 		that.upload(function() {
-	// 			if (callback) {
-	// 				callback();
-	// 			}
-	// 		});
-	// 	});
-	// },
+	connect: function(callback) {
+		var that = this;
+		r.connect({
+			host: process.env.R_HOST || 'localhost',
+			port: process.env.R_PORT || 28015,
+			db: process.env.R_DATABASE || 'test'
+		}, function(err, connection) {
+			if (err) {
+				console.error(err);
+			}
+			else {
+				that.connection = connection;
+			}
+			callback(err);
+		});
+	},
 
-	// noCredentials: function() {
-	// 	if (!process.env.AWS_ACCESS_KEY || !process.env.AWS_SECRET_ACCESS_KEY || !process.env.S3_BUCKET_NAME) {
-	// 		console.error('app300-database: Missing AWS credentials and or S3 bucket name!');
-	// 		return true;
-	// 	}
-	// 	return false;
-	// },
+	createTable: function(table, callback) {
+		r.tableCreate(table)
+		  .run(this.connection, function(err, result) {
+			if (err) {
+				console.error(err);
+			}
+			if (callback) {
+				callback(err, result);
+			}
+		});
+	},
 
-	// noRestoreFile: function() {
-	// 	if (!fs.pathExistsSync(this.restoreFilepath)) {
-	// 		console.error('no file to restore! moving on...');
-	// 		return true;
-	// 	}
-	// 	return false;
-	// },
+	deleteByPrimaryKey: function(table, pk, callback) {
+		r.table(table)
+		  .get(pk)
+		  .delete()
+		  .run(this.connection, function(err, result) {
+			if (err) {
+				console.error(err);
+			}
+			if (callback) {
+				callback(err, result);
+			}
+		});
+	},
 
-	// periodicDump: function() {
-	// 	var that = this;
-	// 	if (this.noCredentials()) { return; }
-	// 	scheduler.scheduleJob(process.env.S3_BACKUP_SCHEDULE || '* 0 * * *', function() {
-	// 		that.dump(function() {
-	// 			that.upload();
-	// 		});
-	// 	});
-	// },
+	deleteWhere: function(table, condition, callback) {
+		r.table(table)
+		  .filter(condition)
+		  .delete()
+		  .run(this.connection, function(err, result) {
+			if (err) {
+				console.error(err);
+			}
+			if (callback) {
+				callback(err, result);
+			}
+		});
+	},
 
-	// restore: function(callback) {
-	// 	if (this.noRestoreFile()) { return; }
-	// 	exec(`rethinkdb restore ${this.restoreFilepath} --force`, function(err, stdout, stderr) {
-	// 		if (err) {
-	// 			console.error(err);
-	// 		}
-	// 		if (callback) { 
-	// 			callback(err, stdout, stderr);
-	// 		}
-	// 	});
-	// },
+	dropTable: function(table, callback) {
+		r.tableDrop(table)
+		  .run(this.connection, function(err, result) {
+			if (err) {
+				console.error(err);
+			}
+			if (callback) {
+				callback(err, result);
+			}
+		});
+	},
 
-	// s3Key: function() {
-	// 	return `${this.s3Marker}rethinkdb_${this.timestamp}.tar.gz`;
-	// },
+	filter: function(table, condition, callback) {
+		r.table(table)
+		  .filter(condition)
+		  .run(this.connection, function(err, cursor) {
+			if (err) {
+				console.error(err);
+				callback(err, null);
+				return;
+			}
+			cursor.toArray(function(err, result) {
+				if (err) {
+					console.error(err);
+				}
+				callback(err, result);
+			});
+		});
+	},
 
-	// scan: function(callback) {
-	// 	if (this.noCredentials()) { return; }
-	// 	s3.listObjects({
-	// 		Bucket: process.env.S3_BUCKET_NAME,
-	// 		Marker: this.s3Marker
-	// 	}, function(err, data) {
-	// 		if (err) {
-	// 			console.error(err);
-	// 		}
-	// 		if (callback) {
-	// 			callback(err, data);
-	// 		}
-	// 	});
-	// },
+	getByPrimaryKey: function(table, pk, callback) {
+		r.table(table)
+		  .get(pk)
+		  .run(this.connection, function(err, result) {
+			if (err) {
+				console.error(err);
+			}
+			callback(err, result);
+		});
+	},
 
-	// upload: function(callback) {
-	// 	if (this.noCredentials()) { return; }
-	// 	var contents = fs.readFileSync(this.dumpFilepath);
-	// 	var body = new Buffer(contents, 'binary');
-	// 	s3.putObject({
-	// 		Bucket: process.env.S3_BUCKET_NAME,
-	// 		Key: this.s3Key(),
-	// 		Body: body,
-	// 		ACL: this.s3Acl
-	// 	}, function(err, data) {
-	// 		if (err) {
-	// 			console.error(err);
-	// 		}
-	// 		if (callback) {
-	// 			callback(err, data);
-	// 		}
-	// 	});
-	// }
+	insert: function(table, documents, callback) {
+		r.table(table)
+		  .insert(documents)
+		  .run(this.connection, function(err, result) {
+			if (err) {
+				console.error(err);
+			}
+			if (callback) {
+				callback(err, result);
+			}
+		});
+	},
+
+	run: function(r, callback) {
+		r.run(this.connection, function(err, result) {
+			if (err) {
+				console.error(err);
+				callback(err, result);
+			}
+			else {
+				if (result.toArray) {
+					result.toArray(function(err, result) {
+						if (err) {
+							console.error(err);
+						}
+						callback(err, result);
+					});
+				}
+				else {
+					callback(err, result);
+				}
+			}
+		});
+	},
+
+	updateAll: function(table, values, callback) {
+		r.table(table)
+		  .update(values)
+		  .run(this.connection, function(err, result) {
+			if (err) {
+				console.error(err);
+			}
+			if (callback) {
+				callback(err, result);
+			}
+		});
+	},
+
+	updateByPrimaryKey: function(table, pk, values, callback) {
+		r.table(table)
+		  .get(pk)
+		  .update(values)
+		  .run(this.connection, function(err, result) {
+		  	if (err) {
+		  		console.error(err);
+		  	}
+		  	if (callback) {
+		  		callback(err, result);
+		  	}
+		  });
+	},
+
+	updateWhere: function(table, condition, values, callback) {
+		r.table(table)
+		  .filter(condition)
+		  .update(values)
+		  .run(this.connection, function(err, result) {
+			if (err) {
+				console.error(err);
+			}
+			if (callback) {
+				callback(err, result);
+			}
+		});
+	}
 
 };
 
+app.easyCrud = function(table) {
+	var crud = express.Router();
+	crud.route(`/${table}`)
+		.post(function(req, res, next) {
+			app.db.insert(table, req.body, function(err, result) {
+				var data = null;
+				return res.status(err ? 500 : 200).send({ err, result, data });
+			});
+		})
+		.get(function(req, res, next) {
+			app.db.all(table, function(err, data) {
+				var result = null;
+				return res.status(err ? 500 : 200).send({ err, result, data });
+			});
+		});
+	crud.route(`/${table}/:id`)
+		.get(function(req, res, next) {
+			app.db.getByPrimaryKey(table, req.params.id, function(err, data) {
+				var result = null;
+				return res.status(err ? 500 : 200).send({ err, result, data });
+			});
+		})
+		.put(function(req, res, next) {
+			app.db.updateByPrimaryKey(table, req.params.id, req.body, function(err, result) {
+				var data = null;
+				return res.status(err ? 500 : 200).send({ err, result, data });
+			});
+		})
+		.delete(function(req, res, next) {
+			app.db.deleteByPrimaryKey(table, req.params.id, function(err, result) {
+				var data = null;
+				return res.status(err ? 500 : 200).send({ err, result, data });
+			});
+		});
+	app.use('/', crud);
+};
 
+app.config = function() {
+	app.use(bodyParser.json());
+	app.use(bodyParser.urlencoded({ extended: false }));
+	return app;
+};
+
+app.run = function(callback) {
+	app.listen(process.env.EXPRESS_PORT || 3000, function() {
+		if (callback) {
+			callback();
+		}
+	});
+	return app;
+};
+
+module.exports = { app, express, bodyParser };
