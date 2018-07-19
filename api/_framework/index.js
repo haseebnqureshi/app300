@@ -23,6 +23,8 @@ var app = express();
 
 var r = require('rethinkdb');
 
+var uuidv5 = require('uuid/v5');
+
 var bodyParser = require('body-parser');
 
 
@@ -190,9 +192,51 @@ app.db = {
 		});
 	},
 
-	insert: function(table, documents, callback) {
+	insert: function(table, documents, callback, uniqueness) {
+
+		/*
+		standardizing documents to be an array for easier 
+		pre query transformations. 
+		*/
+
+		if (_.isObject(documents)) {
+			documents = [documents];
+		}
+
+		/*
+		according to rethinkdb's documentation, this hashes documents
+		per their uuid v5 specifications, with their namespace
+		91461c99-f89d-49d2-af96-d8e2e14e9b58
+		
+		@see https://www.rethinkdb.com/api/javascript/uuid/
+
+		WARNING: careful with the uniquness here with updates 
+		and maintaining uniquness. the easyCrud scripts do not 
+		enforce uniqueness past the insertion point. 
+
+		so for example, if on update the entire document exactly 
+		matches another record, the changed document's id will not
+		be updated to reflect that change, thereby potentially 
+		having exactly matching documents, but with varying 
+		primary keys. 
+
+		either accept this or not, but the amount of logic to
+		help enforce this, in a clean and less obtrusive way
+		was enough to delegate it to the application's logic.
+		*/
+
+		if (uniqueness === true) {
+			documents = _.map(documents, function(doc) {
+				doc.id = uuidv5(
+					JSON.stringify(_.omit(doc, 'id')), 
+					'91461c99-f89d-49d2-af96-d8e2e14e9b58'
+				);
+				return doc;
+			});	
+		}
+
 		r.table(table)
-		  .insert(documents)
+		  .insert(documents, { returnChanges: true })
 		  .run(this.connection, function(err, result) {
 			if (err) {
 				console.error(err);
@@ -241,7 +285,7 @@ app.db = {
 	updateByPrimaryKey: function(table, pk, values, callback) {
 		r.table(table)
 		  .get(pk)
-		  .update(values)
+		  .update(values, { returnChanges: true })
 		  .run(this.connection, function(err, result) {
 		  	if (err) {
 		  		console.error(err);
@@ -255,7 +299,7 @@ app.db = {
 	updateWhere: function(table, condition, values, callback) {
 		r.table(table)
 		  .filter(condition)
-		  .update(values)
+		  .update(values, { returnChanges: true })
 		  .run(this.connection, function(err, result) {
 			if (err) {
 				console.error(err);
@@ -268,44 +312,51 @@ app.db = {
 
 };
 
-app.easyCrud = function(table) {
+app.easyCrud = function(table, options) {
+	var options = _.extend({ 
+		uniqueness: false
+	}, options || {});
+
 	var crud = express.Router();
 	crud.route(`/${table}`)
 		.post(function(req, res, next) {
 			app.db.insert(table, req.body, function(err, result) {
 				var data = null;
-				return res.status(err ? 500 : 200).send({ err, result, data });
-			});
+				var status = err ? 500 : (result.errors > 0 ? 400 : 200);
+				res.status(status).send({ err, result, data });
+			}, options.uniqueness === true ? true : false);
 		})
 		.get(function(req, res, next) {
 			app.db.all(table, function(err, data) {
 				var result = null;
-				return res.status(err ? 500 : 200).send({ err, result, data });
+				var status = err ? 500 : (data ? 200 : 404);
+				res.status(status).send({ err, result, data });
 			});
 		});
 	crud.route(`/${table}/:id`)
 		.get(function(req, res, next) {
 			app.db.getByPrimaryKey(table, req.params.id, function(err, data) {
 				var result = null;
-				return res.status(err ? 500 : 200).send({ err, result, data });
+				var status = err ? 500 : (data ? 200 : 404);
+				res.status(status).send({ err, result, data });
 			});
 		})
 		.put(function(req, res, next) {
 			app.db.updateByPrimaryKey(table, req.params.id, req.body, function(err, result) {
 				var data = null;
-				return res.status(err ? 500 : 200).send({ err, result, data });
+				res.status(err ? 500 : 200).send({ err, result, data });
 			});
 		})
 		.delete(function(req, res, next) {
 			app.db.deleteByPrimaryKey(table, req.params.id, function(err, result) {
 				var data = null;
-				return res.status(err ? 500 : 200).send({ err, result, data });
+				res.status(err ? 500 : 200).send({ err, result, data });
 			});
 		});
 	app.use('/', crud);
 };
 
-app.config = function() {
+app.easyConfig = function() {
 	app.use(bodyParser.json());
 	app.use(bodyParser.urlencoded({ extended: false }));
 	return app;
@@ -320,4 +371,4 @@ app.run = function(callback) {
 	return app;
 };
 
-module.exports = { app, express, bodyParser };
+module.exports = { app, express, bodyParser, r };

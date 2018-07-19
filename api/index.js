@@ -4,7 +4,7 @@ var framework = require('./_framework');
 
 var app = framework.app;
 
-app.config();
+app.easyConfig();
 
 app.get('/', function(req, res) {
 	var appInfo = app.info;
@@ -14,9 +14,9 @@ app.get('/', function(req, res) {
 
 app.db.connect(function(err) {
 
-	app.easyCrud('users');
+	app.easyCrud('users', { uniqueness: true });
 
-	app.easyCrud('items');
+	app.easyCrud('items', { uniqueness: true });
 
 });
 
