@@ -3,7 +3,10 @@
   "version": "1.0.0",
   "description": "API from App300 framework",
   "main": "index.js",
-  "scripts": {},
+  "scripts": {
+    "tables": "node tables.js",
+    "start": "node index.js"
+  },
   "bin": {},
   "author": "",
   "license": "",
