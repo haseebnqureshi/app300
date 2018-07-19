@@ -86,6 +86,10 @@ app.db = {
 		});
 	},
 
+	close: function() {
+		this.connection.close();
+	},
+
 	connect: function(callback) {
 		var that = this;
 		r.connect({
@@ -99,12 +103,14 @@ app.db = {
 			else {
 				that.connection = connection;
 			}
-			callback(err);
+			if (callback) {
+				callback(err, connection);
+			}
 		});
 	},
 
-	createTable: function(table, callback) {
-		r.tableCreate(table)
+	createTable: function(table, options, callback) {
+		r.tableCreate(table, options || {})
 		  .run(this.connection, function(err, result) {
 			if (err) {
 				console.error(err);
