@@ -10,7 +10,7 @@ cd ..
   npm install
 
   # ensuring tables are created, if any
-  npm run tables
+  # npm run tables
 
   # adding our script onto pm2 processes
   pm2 start index.js --name api
