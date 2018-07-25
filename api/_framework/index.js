@@ -359,7 +359,19 @@ app.easyAuth = function(userTable, expressRouter) {
 		catch (err) {
 			return res.status(401).send({ message: 'Authorization failed, potentially missing credentials or expired / invalid credentials!' });
 		}
-		next();
+
+		app.db.filter(userTable, {
+			access_token: req.accessToken,
+			secret_token: req.secretToken
+		}, function(err, result) {
+			console.log({ err, result })
+			if (err || result.length === 0) {
+				return res.status(422).send({ message: 'Authorization failed, credentials seem invalid!' })
+			}
+			req.user = _.omit(result[0], 'access_token', 'secret_token');
+			next();
+		});
+
 	};
 
 	/*
