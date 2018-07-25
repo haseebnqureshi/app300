@@ -1,14 +1,5 @@
 'use strict';
 
-/*
-.env variables
-
-AWS_ACCESS_KEY = 
-AWS_SECRET_ACCESS_KEY = 
-S3_BACKUP_SCHEDULE = * 0 * * *
-S3_BUCKET_NAME = 
-*/
-
 var fs = require('fs-extra');
 
 var path = require('path');

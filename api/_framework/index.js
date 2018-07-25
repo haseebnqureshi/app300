@@ -1,14 +1,5 @@
 'use strict';
 
-/*
-.env variables
-
-process.env.R_HOST
-process.env.R_PORT
-process.env.R_DATABASE || 'test'
-process.env.EXPRESS_PORT
-*/
-
 var fs = require('fs-extra');
 
 var path = require('path');
