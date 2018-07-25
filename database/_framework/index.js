@@ -128,7 +128,8 @@ module.exports = {
 	},
 
 	s3Key: function() {
-		return `${this.s3Marker}rethinkdb_${this.timestamp}.tar.gz`;
+		var env = process.env.NODE_ENV || 'development';
+		return `${env}_${this.s3Marker}rethinkdb_${this.timestamp}.tar.gz`;
 	},
 
 	scan: function(callback) {
