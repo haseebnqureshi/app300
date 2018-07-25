@@ -20,4 +20,12 @@ app.db.connect(function(err) {
 
 });
 
+app.easyAuth();
+
+app.get('/auth-required', function(req, res) {
+	var appInfo = app.info;
+	var frameworkInfo = app.framework;
+	res.status(200).send({ access: req.accessToken, secret: req.secretToken, appInfo, frameworkInfo });
+});
+
 app.run();

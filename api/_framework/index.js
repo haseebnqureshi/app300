@@ -345,6 +345,36 @@ app.easyCrud = function(table, options) {
 			});
 		});
 	app.use('/', crud);
+	return crud;
+};
+
+app.easyAuth = function(userTable, expressRouter) {
+
+	var check = function(req, res, next) {
+		try {
+			var bearer = req.get('Authorization').split('Bearer ')[1];
+			req.accessToken = bearer.split(':')[0] || '';
+			req.secretToken = bearer.split(':')[1] || '';
+		}
+		catch (err) {
+			return res.status(401).send({ message: 'Authorization failed, potentially missing credentials or expired / invalid credentials!' });
+		}
+		next();
+	};
+
+	/*
+	if expressRouter is passed, attach credentials onto that router
+	instead of the app itself.
+	*/
+
+	if (expressRouter) {
+		expressRouter.use(check);
+	}
+	else {
+		app.use(check);
+	}
+
+	return check;
 };
 
 app.easyConfig = function() {
