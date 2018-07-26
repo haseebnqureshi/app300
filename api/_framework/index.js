@@ -855,7 +855,7 @@ app.easy = {
 		app.get(callback, passport.authenticate('google', {
 			successRedirect,
 			failureRedirect
-		});
+		}));
 
 		/*
 		endpoint disconnecting google account from application...
