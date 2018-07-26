@@ -20,6 +20,16 @@ app.db.connect(function(err) {
 
 	app.easy.auth('users');
 
+	app.auth.config('users', true);
+
+	app.easy.google('users', 
+		'/auth/google',
+		'/auth/google/callback',
+		'/auth/google/detach',
+		'/',
+		'/'
+	);
+
 	app.get('/auth-required', function(req, res) {
 		var appInfo = app.info;
 		var frameworkInfo = app.framework;
