@@ -303,96 +303,100 @@ app.db = {
 
 };
 
-app.easyCrud = function(table, options) {
-	var options = _.extend({ 
-		uniqueness: false
-	}, options || {});
+app.easy = {
 
-	var crud = express.Router();
-	crud.route(`/${table}`)
-		.post(function(req, res, next) {
-			app.db.insert(table, req.body, function(err, result) {
-				var data = null;
-				var status = err ? 500 : (result.errors > 0 ? 400 : 200);
-				res.status(status).send({ err, result, data });
-			}, options.uniqueness === true ? true : false);
-		})
-		.get(function(req, res, next) {
-			app.db.all(table, function(err, data) {
-				var result = null;
-				var status = err ? 500 : (data ? 200 : 404);
-				res.status(status).send({ err, result, data });
-			});
-		});
-	crud.route(`/${table}/:id`)
-		.get(function(req, res, next) {
-			app.db.getByPrimaryKey(table, req.params.id, function(err, data) {
-				var result = null;
-				var status = err ? 500 : (data ? 200 : 404);
-				res.status(status).send({ err, result, data });
-			});
-		})
-		.put(function(req, res, next) {
-			app.db.updateByPrimaryKey(table, req.params.id, req.body, function(err, result) {
-				var data = null;
-				res.status(err ? 500 : 200).send({ err, result, data });
-			});
-		})
-		.delete(function(req, res, next) {
-			app.db.deleteByPrimaryKey(table, req.params.id, function(err, result) {
-				var data = null;
-				res.status(err ? 500 : 200).send({ err, result, data });
-			});
-		});
-	app.use('/', crud);
-	return crud;
-};
+	crud: function(table, options) {
+		var options = _.extend({ 
+			uniqueness: false
+		}, options || {});
 
-app.easyAuth = function(userTable, expressRouter) {
+		var crud = express.Router();
+		crud.route(`/${table}`)
+			.post(function(req, res, next) {
+				app.db.insert(table, req.body, function(err, result) {
+					var data = null;
+					var status = err ? 500 : (result.errors > 0 ? 400 : 200);
+					res.status(status).send({ err, result, data });
+				}, options.uniqueness === true ? true : false);
+			})
+			.get(function(req, res, next) {
+				app.db.all(table, function(err, data) {
+					var result = null;
+					var status = err ? 500 : (data ? 200 : 404);
+					res.status(status).send({ err, result, data });
+				});
+			});
+		crud.route(`/${table}/:id`)
+			.get(function(req, res, next) {
+				app.db.getByPrimaryKey(table, req.params.id, function(err, data) {
+					var result = null;
+					var status = err ? 500 : (data ? 200 : 404);
+					res.status(status).send({ err, result, data });
+				});
+			})
+			.put(function(req, res, next) {
+				app.db.updateByPrimaryKey(table, req.params.id, req.body, function(err, result) {
+					var data = null;
+					res.status(err ? 500 : 200).send({ err, result, data });
+				});
+			})
+			.delete(function(req, res, next) {
+				app.db.deleteByPrimaryKey(table, req.params.id, function(err, result) {
+					var data = null;
+					res.status(err ? 500 : 200).send({ err, result, data });
+				});
+			});
+		app.use('/', crud);
+		return crud;
+	},
 
-	var check = function(req, res, next) {
-		try {
-			var bearer = req.get('Authorization').split('Bearer ')[1];
-			req.accessToken = bearer.split(':')[0] || '';
-			req.secretToken = bearer.split(':')[1] || '';
-		}
-		catch (err) {
-			return res.status(401).send({ message: 'Authorization failed, potentially missing credentials or expired / invalid credentials!' });
-		}
+	auth: function(userTable, expressRouter) {
 
-		app.db.filter(userTable, {
-			access_token: req.accessToken,
-			secret_token: req.secretToken
-		}, function(err, result) {
-			console.log({ err, result })
-			if (err || result.length === 0) {
-				return res.status(422).send({ message: 'Authorization failed, credentials seem invalid!' })
+		var check = function(req, res, next) {
+			try {
+				var bearer = req.get('Authorization').split('Bearer ')[1];
+				req.accessToken = bearer.split(':')[0] || '';
+				req.secretToken = bearer.split(':')[1] || '';
 			}
-			req.user = _.omit(result[0], 'access_token', 'secret_token');
-			next();
-		});
+			catch (err) {
+				return res.status(401).send({ message: 'Authorization failed, potentially missing credentials or expired / invalid credentials!' });
+			}
 
-	};
+			app.db.filter(userTable, {
+				access_token: req.accessToken,
+				secret_token: req.secretToken
+			}, function(err, result) {
+				console.log({ err, result })
+				if (err || result.length === 0) {
+					return res.status(422).send({ message: 'Authorization failed, credentials seem invalid!' })
+				}
+				req.user = _.omit(result[0], 'access_token', 'secret_token');
+				next();
+			});
 
-	/*
-	if expressRouter is passed, attach credentials onto that router
-	instead of the app itself.
-	*/
+		};
 
-	if (expressRouter) {
-		expressRouter.use(check);
+		/*
+		if expressRouter is passed, attach credentials onto that router
+		instead of the app itself.
+		*/
+
+		if (expressRouter) {
+			expressRouter.use(check);
+		}
+		else {
+			app.use(check);
+		}
+
+		return check;
+	},
+
+	config: function() {
+		app.use(bodyParser.json());
+		app.use(bodyParser.urlencoded({ extended: false }));
+		return app;
 	}
-	else {
-		app.use(check);
-	}
 
-	return check;
-};
-
-app.easyConfig = function() {
-	app.use(bodyParser.json());
-	app.use(bodyParser.urlencoded({ extended: false }));
-	return app;
 };
 
 app.run = function(callback) {

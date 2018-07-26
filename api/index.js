@@ -4,7 +4,7 @@ var framework = require('./_framework');
 
 var app = framework.app;
 
-app.easyConfig();
+app.easy.config();
 
 app.get('/', function(req, res) {
 	var appInfo = app.info;
@@ -14,11 +14,11 @@ app.get('/', function(req, res) {
 
 app.db.connect(function(err) {
 
-	app.easyCrud('users', { uniqueness: true });
+	app.easy.crud('users', { uniqueness: true });
 
-	app.easyCrud('items', { uniqueness: true });
+	app.easy.crud('items', { uniqueness: true });
 
-	app.easyAuth('users');
+	app.easy.auth('users');
 
 	app.get('/auth-required', function(req, res) {
 		var appInfo = app.info;
