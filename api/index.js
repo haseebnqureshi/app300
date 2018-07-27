@@ -18,19 +18,17 @@ app.db.connect(function(err) {
 
 	app.easy.crud('items', { uniqueness: true });
 
-	app.easy.auth('users');
-
 	app.auth.config('users', true);
 
 	app.easy.google('users', 
-		'/auth/google',
-		'/auth/google/callback',
-		'/auth/google/detach',
+		'/connect/google',
+		'/connect/google/callback',
+		'/connect/google/detach',
 		'/',
 		'/'
 	);
 
-	app.get('/auth-required', function(req, res) {
+	app.get('/api-auth', app.easy.bearerAuth('users'), function(req, res) {
 		var appInfo = app.info;
 		var frameworkInfo = app.framework;
 		res.status(200).send({ user: req.user, appInfo, frameworkInfo });
