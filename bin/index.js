@@ -10,6 +10,8 @@ var inquirer = require('inquirer');
 
 var _ = require('underscore');
 
+var execSync = require('child_process').execSync;
+
 var projectDir = process.cwd();
 
 var packageDir = path.resolve(__dirname, '..');
@@ -25,14 +27,14 @@ var ensureKeyDirectories = function() {
 
 var copyFrameworkFiles = function() {
 	fs.copySync(path.resolve(packageDir, 'database/_framework'), path.resolve(projectDir, 'database/_framework'));
-	fs.copySync(path.resolve(packageDir, 'api/_framework'), path.resolve(projectDir, 'api_/_framework'));
+	fs.copySync(path.resolve(packageDir, 'api/_framework'), path.resolve(projectDir, 'api/_framework'));
 	fs.copySync(path.resolve(packageDir, 'app/_framework'), path.resolve(projectDir, 'app/_framework'));
 	fs.copySync(path.resolve(packageDir, '_framework'), path.resolve(projectDir, '_framework'));
 };
 
 var copyVagrantFiles = function() {
 	fs.copySync(path.resolve(packageDir, 'Vagrantfile'), path.resolve(projectDir, 'Vagrantfile'));
-	fs.copySync(path.resolve(packageDir, '.gitignore'), path.resolve(projectDir, '.gitignore'));
+	fs.copySync(path.resolve(__dirname, 'gitignore'), path.resolve(projectDir, '.gitignore'));
 };
 
 var copyStartingFiles = function() {
@@ -44,6 +46,15 @@ var copyStartingFiles = function() {
 	fs.copySync(path.resolve(packageDir, 'app/.env.example'), path.resolve(projectDir, 'app/.env.example'));
 	fs.copySync(path.resolve(packageDir, 'app/index.js'), path.resolve(projectDir, 'app/index.js'));
 	fs.copySync(path.resolve(packageDir, 'app/package.json'), path.resolve(projectDir, 'app/package.json'));
+};
+
+var installingPackages = function() {
+	execSync(`npm install ./database/_framework --loglevel=error`);
+	execSync(`npm install ./api/_framework --loglevel=error`);
+	execSync(`npm install ./api --loglevel=error`);
+	execSync(`npm install ./app/_framework --loglevel=error`);
+	execSync(`npm install ./app --loglevel=error`);
+	execSync(`npm install ./_framework --loglevel=error`);
 };
 
 var prompt = function() {
@@ -119,14 +130,25 @@ var prompt = function() {
 
 			copyStartingFiles();
 
-			console.log(
-				  `\n` + chalk.gray(`| `)
-				+ `\n` + chalk.gray(`| `) + chalk.green.bold(`Success! Finished scaffolding your app300 project!`)
-				+ `\n` + chalk.gray(`| `)
-				+ `\n`
-			);
-
 		}
+
+		console.log(
+			  `\n` + chalk.gray(`| `)
+			+ `\n` + chalk.gray(`| `) + chalk.yellow.bold(`Lastly...`)
+			+ `\n` + chalk.gray(`| `) + chalk.gray.bold(`NPM installing each package in the project...`)
+			+ `\n` + chalk.gray(`| `) + chalk.gray.bold(`That way, we're not missing any dependency...`)
+			+ `\n` + chalk.gray(`| `)
+		);
+
+		installingPackages();
+
+		console.log(
+			  `\n` + chalk.gray(`| `)
+			+ `\n` + chalk.gray(`| `) + chalk.green.bold(`Success! Finished scaffolding your app300 project!`)
+			+ `\n` + chalk.gray(`| `) + chalk.green.bold(`Make sure to run `) + chalk.yellow.bold(`vagrant up`) + chalk.green.bold(` to quickly get up and running!`)
+			+ `\n` + chalk.gray(`| `)
+			+ `\n`
+		);
 
 	});
 
