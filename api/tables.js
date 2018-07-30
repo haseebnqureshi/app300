@@ -4,14 +4,16 @@ var framework = require('./_framework');
 
 var app = framework.app;
 
-app.db.connect(function(err) {
+framework.db.connect(function(err) {
 
 	console.log({ err });
 
-	app.db.createTable('users');
+	framework.db.createTable('users');
 
-	app.db.createTable('items');
+	framework.db.createTable('items');
 
-	app.db.close();
+	framework.db.createTable('tokens');
+
+	framework.db.close();
 
 });
