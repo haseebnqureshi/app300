@@ -49,12 +49,12 @@ var copyStartingFiles = function() {
 };
 
 var installingPackages = function() {
-	execSync(`npm install ./database/_framework --loglevel=error`);
-	execSync(`npm install ./api/_framework --loglevel=error`);
-	execSync(`npm install ./api --loglevel=error`);
-	execSync(`npm install ./app/_framework --loglevel=error`);
-	execSync(`npm install ./app --loglevel=error`);
-	execSync(`npm install ./_framework --loglevel=error`);
+	execSync(`npm install ./database/_framework --loglevel=silent`);
+	execSync(`npm install ./api/_framework --loglevel=silent`);
+	execSync(`npm install ./api --loglevel=silent`);
+	execSync(`npm install ./app/_framework --loglevel=silent`);
+	execSync(`npm install ./app --loglevel=silent`);
+	execSync(`npm install ./_framework --loglevel=silent`);
 };
 
 var prompt = function() {
@@ -69,6 +69,9 @@ var prompt = function() {
 		+ `\n` + chalk.gray(`| `)
 		+ `\n` + chalk.gray(`| `) + `Quickly scaffold to create (or update) your app300 application.`
 		+ `\n` + chalk.gray(`| `) + chalk.gray(`Go through the prompts; it'll be quick.`)
+		+ `\n` + chalk.gray(`| `)
+		+ `\n` + chalk.gray(`| `) + chalk.green(`Project directory recognized as ${projectDir}`)
+		+ `\n` + chalk.gray(`| `)
 		+ `\n`
 	);
 
@@ -76,17 +79,17 @@ var prompt = function() {
 		{
 			type: 'confirm',
 			name: 'frameworkFiles',
-			message: `Are you sure you want to copy all updated app300 framework files into your project? \nAny customizations that you might have done (at your own peril) in the _framework \ndirectories will be lost.`
+			message: chalk.white(`\nAre you sure you want to copy all updated app300 framework files into your project? \nAny customizations that you might have done (at your own peril) in the _framework \ndirectories will be lost.\n`)
 		},
 		{
 			type: 'confirm',
 			name: 'vagrantFiles',
-			message: `Do you want us to copy the default app300 Vagrantfile, along with our gitignore file?`
+			message: chalk.white(`\nDo you want us to copy the default app300 Vagrantfile, along with our gitignore file?\n`)
 		},
 		{
 			type: 'confirm',
 			name: 'startingFiles',
-			message: `Are you sure you want to copy all starting app300 framework files into your project? \nFor instance, any .env.example, index.js, package.json or files otherwise will be \ncompletely overwritten and lost forever. (Only do so if you've got everything \ncommitted and versioned.)`
+			message: chalk.white(`\nAre you sure you want to copy all starting app300 framework files into your project? \nFor instance, any .env.example, index.js, package.json or files otherwise will be \ncompletely overwritten and lost forever. (Only do so if you've got everything \ncommitted and versioned.\n`)
 		}
 	];
 
@@ -96,7 +99,6 @@ var prompt = function() {
 
 			console.log(
 				  `\n` + chalk.gray(`| `)
-				+ `\n` + chalk.gray(`| `) + chalk.yellow.bold(`First...`)
 				+ `\n` + chalk.gray(`| `) + chalk.gray.bold(`Copying all framework files from app300 into your project...`)
 				+ `\n` + chalk.gray(`| `)
 			);
@@ -110,7 +112,6 @@ var prompt = function() {
 
 			console.log(
 				  `\n` + chalk.gray(`| `)
-				+ `\n` + chalk.gray(`| `) + chalk.yellow.bold(`Now...`)
 				+ `\n` + chalk.gray(`| `) + chalk.gray.bold(`Copying our app300 Vagrantfile and .gitignore into your project...`)
 				+ `\n` + chalk.gray(`| `)
 			);
@@ -123,7 +124,6 @@ var prompt = function() {
 
 			console.log(
 				  `\n` + chalk.gray(`| `)
-				+ `\n` + chalk.gray(`| `) + chalk.yellow.bold(`Finally...`)
 				+ `\n` + chalk.gray(`| `) + chalk.gray.bold(`Copying all starting files from app300 into your project...`)
 				+ `\n` + chalk.gray(`| `)
 			);
@@ -134,13 +134,17 @@ var prompt = function() {
 
 		console.log(
 			  `\n` + chalk.gray(`| `)
-			+ `\n` + chalk.gray(`| `) + chalk.yellow.bold(`Lastly...`)
 			+ `\n` + chalk.gray(`| `) + chalk.gray.bold(`NPM installing each package in the project...`)
 			+ `\n` + chalk.gray(`| `) + chalk.gray.bold(`That way, we're not missing any dependency...`)
 			+ `\n` + chalk.gray(`| `)
 		);
 
-		installingPackages();
+		try {
+			installingPackages();
+		}
+		catch(err) {
+			console.error(err);
+		}
 
 		console.log(
 			  `\n` + chalk.gray(`| `)

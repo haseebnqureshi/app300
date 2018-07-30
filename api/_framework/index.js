@@ -52,7 +52,7 @@ module.exports = {
 	*/
 
 	run: function(a, callback) {
-		if (process.env.EXPRESS_API_PATH !== '') { 
+		if (process.env.EXPRESS_API_PATH && process.env.EXPRESS_API_PATH !== '') { 
 			return {
 				app: a,
 				path: process.env.EXPRESS_API_PATH
