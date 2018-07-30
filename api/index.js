@@ -21,12 +21,12 @@ framework.db.connect(function(err) {
 
 	framework.crud.router('items', { uniqueness: true });
 
-	framework.oauth2.router({
-		provider: 'google',
-		scopes: [
+	// framework.oauth2.router({
+	// 	provider: 'google',
+	// 	scopes: [
 
-		]
-	});
+	// 	]
+	// });
 
 	app.get('/bearer-auth', framework.auth.bearerToken('users', 'tokens'), function(req, res) {
 		res.status(200).send({ 
@@ -36,7 +36,7 @@ framework.db.connect(function(err) {
 
 });
 
-framework.run();
+module.exports = framework.run(app);
 
 
 

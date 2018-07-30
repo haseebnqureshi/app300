@@ -45,12 +45,24 @@ module.exports = {
 		this.app.use(bodyParser.urlencoded({ extended: false }));
 	},
 
-	run: function(callback) {
-		app.listen(process.env.EXPRESS_PORT || 3000, function() {
+	/*
+	framework decides whether app will run standalone, or with
+	the app on one port and different mounting paths. this is
+	useful for running both api and app on port 443, for i.e.
+	*/
+
+	run: function(a, callback) {
+		if (process.env.EXPRESS_API_PATH !== '') { 
+			return {
+				app: a,
+				path: process.env.EXPRESS_API_PATH
+			}; 
+		}
+		a.listen(process.env.EXPRESS_API_PORT || 3000, function() {
 			if (callback) {
 				callback();
 			}
-		})
+		});
 	},
 
 	info: require(path.resolve(__dirname, 'package.json')),
@@ -59,6 +71,6 @@ module.exports = {
 
 	auth: require(path.resolve(__dirname, 'auth.js'))(db),
 
-	oauth2: require(path.resolve(__dirname, 'oauth2.js'))(express, app, db)
+	// oauth2: require(path.resolve(__dirname, 'oauth2.js'))(express, app, db)
 
 };
