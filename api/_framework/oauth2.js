@@ -4,6 +4,8 @@ var querystring = require('querystring');
 
 var unirest = require('unirest');
 
+var request = require('request');
+
 var _ = require('underscore');
 
 var providers = require(__dirname, 'oauth2.json');
@@ -50,14 +52,17 @@ module.exports = function(express, app, db) {
 		var provider = flowProvider(options);
 
 		//only a set of params, statically setting our payload
-		unirest.post(provider.access_url).send({
-			grant_type: 'authorization_code',
-			code: options.code,
-			redirect_uri: options.redirect_uri,
-			client_id: options.client_id,
-			client_secret: options.client_secret
-		}).end(function(response) {
-			callback(response);
+		request.post({
+			url: provider.access_url,
+			form: {
+				grant_type: 'authorization_code',
+				code: options.code,
+				redirect_uri: options.redirect_uri,
+				client_id: options.client_id,
+				client_secret: options.client_secret
+			}
+		}, function(error, httpResponse, body) {
+			callback(error, httpResponse, body);
 		});
 	};
 
@@ -90,19 +95,20 @@ module.exports = function(express, app, db) {
 			}
 
 			//finally, posting to receive our access token
-			flowAccess(options, function(response) {
+			flowAccess(options, function(error, httpResponse, body) {
 
 				//somehow our access token didn't work out
-				if (response.error) {
-					return res.status(500).send({ error: response.error });
+				if (error) {
+					return res.status(500).send({ error });
 				}
 
 				//otherwise, persist what we've got back
-				var body = response.body;
-				var access_token = body.access_token;
-				var expries_in = body.expires_in;
-				var scope = body.scope;
-				var token_type = body.token_type;
+				console.log(body);
+				// var body = response.body;
+				// var access_token = body.access_token;
+				// var expries_in = body.expires_in;
+				// var scope = body.scope;
+				// var token_type = body.token_type;
 
 				res.status(200).send(body);
 			});
