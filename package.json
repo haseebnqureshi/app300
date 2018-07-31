@@ -1,6 +1,6 @@
 {
   "name": "app300",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "description": "Easily creating an application in under 5 minutes (or 300 seconds). Uses Vagrant and the AWS SDK to create and deploy a fully functioning application that is well architected, easily maintainable, and adheres to the twelve factor application.",
   "main": "index.js",
   "scripts": {},
