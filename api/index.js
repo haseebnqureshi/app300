@@ -17,11 +17,11 @@ app.get('/', function(req, res) {
 
 framework.db.connect(function(err) {
 
-	framework.crud.router('users', { uniqueness: true });
+	app.use('/users', framework.crud.router('users', { uniqueness: true }));
 
-	framework.crud.router('items', { uniqueness: true });
+	app.use('/items', framework.crud.router('items', { uniqueness: true }));
 
-	framework.oauth2.router({
+	app.use(framework.oauth2.router({
 		provider: 'google',
 		client_id: process.env.GOOGLE_CLIENT_ID,
 		client_secret: process.env.GOOGLE_CLIENT_SECRET,
@@ -30,7 +30,7 @@ framework.db.connect(function(err) {
 			'https://www.googleapis.com/auth/plus.login',
 			'https://www.googleapis.com/auth/userinfo.profile',
 		]
-	});
+	}));
 
 	app.get('/bearer-auth', framework.auth.bearerToken('users', 'tokens'), function(req, res) {
 		res.status(200).send({ 

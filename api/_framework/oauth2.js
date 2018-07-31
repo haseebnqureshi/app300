@@ -2,13 +2,13 @@
 
 var querystring = require('querystring');
 
-var unirest = require('unirest');
-
 var request = require('request');
 
 var _ = require('underscore');
 
-var providers = require(__dirname, 'oauth2.json');
+var path = require('path');
+
+var providers = require(path.resolve(__dirname, 'oauth2.json'));
 
 //@see https://aaronparecki.com/oauth-2-simplified/
 //@see https://github.com/simov/grant/blob/master/lib/flow/oauth2.js
@@ -32,7 +32,7 @@ module.exports = function(express, app, db) {
 		var params = _.extend(provider, options);
 		params.state = '531be960-f6cc-4ab3-a7bf-e6e6575d9ad4';
 		params.response_type = 'code';
-		params.scope = params.scopes.join(provider.scope_delimeter);
+		params.scope = params.scopes.join(provider.scope_delimiter);
 		params = flowAuthorizeExceptions(params);
 
 		//there may be number of extra params, so we whitelist what we know
@@ -44,6 +44,7 @@ module.exports = function(express, app, db) {
 			'client_id',
 			... provider.custom_parameters || []
 		]);
+
 		return provider.authorize_url + '?' + querystring.stringify(params);
 	};
 
@@ -103,12 +104,11 @@ module.exports = function(express, app, db) {
 				}
 
 				//otherwise, persist what we've got back
-				console.log(body);
-				// var body = response.body;
-				// var access_token = body.access_token;
-				// var expries_in = body.expires_in;
-				// var scope = body.scope;
-				// var token_type = body.token_type;
+				var access_token = body.access_token;
+				var expries_in = body.expires_in;
+				var id_token = body.id_token;
+				var scope = body.scope;
+				var token_type = body.token_type;
 
 				res.status(200).send(body);
 			});
