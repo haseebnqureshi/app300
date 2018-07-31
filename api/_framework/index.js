@@ -71,6 +71,6 @@ module.exports = {
 
 	auth: require(path.resolve(__dirname, 'auth.js'))(db),
 
-	// oauth2: require(path.resolve(__dirname, 'oauth2.js'))(express, app, db)
+	oauth2: require(path.resolve(__dirname, 'oauth2.js'))(express, app, db)
 
 };

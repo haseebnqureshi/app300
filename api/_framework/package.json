@@ -18,11 +18,9 @@
     "fs-extra": "^7.0.0",
     "googleapis": "^32.0.0",
     "moment": "^2.22.2",
-    "passport": "^0.4.0",
-    "passport-google-oauth": "^1.0.0",
-    "passport-local": "^1.0.0",
     "rethinkdb": "^2.3.3",
     "underscore": "^1.9.1",
+    "unirest": "^0.5.1",
     "uuid": "^3.3.2"
   }
 }
