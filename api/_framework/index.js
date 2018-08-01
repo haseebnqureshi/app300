@@ -22,6 +22,8 @@ var db = require(path.resolve(__dirname, 'db.js'))(
 
 var oauth2 = require(path.resolve(__dirname, 'oauth2.js'))();
 
+var identity = require(path.resolve(__dirname, 'identity.js'))();
+
 
 /* CONFIG & INITIAL VARS */
 
@@ -43,6 +45,8 @@ module.exports = {
 	db,
 
 	oauth2,
+
+	flow: require(path.resolve(__dirname, 'flow.js'))(express, oauth2, identity),
 
 	config: function() {
 		this.app.use(bodyParser.json());
@@ -73,8 +77,6 @@ module.exports = {
 
 	crud: require(path.resolve(__dirname, 'crud.js'))(express, app, db),
 
-	auth: require(path.resolve(__dirname, 'auth.js'))(db),
-
-	flow: require(path.resolve(__dirname, 'flow.js'))(oauth2, express)
+	auth: require(path.resolve(__dirname, 'auth.js'))(db)
 
 };

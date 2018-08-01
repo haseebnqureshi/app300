@@ -1,5 +1,7 @@
 'use string';
 
+var request = require('request');
+
 //@see https://aaronparecki.com/oauth-2-simplified/
 //@see https://github.com/simov/grant/blob/master/lib/flow/oauth2.js
 
@@ -26,7 +28,7 @@ options = {
 
 */
 
-module.exports = function(oauth2, express) {
+module.exports = function(express, oauth2, identity) {
 
 	var connect = function(options, callback /* (err, data, req, res) */) {
 		var options = options || {};
@@ -64,16 +66,31 @@ module.exports = function(oauth2, express) {
 				oauth2.access(
 					options.access_url,
 					options,
-					function(err, body, response) {
+					function(err, json, response) {
 
 						//if access_token didn't work out
 						if (err) {
 							return callback(err, null, req, res);
 						}
 
-						//otherwise we've got our access_token
-						return callback(null, body, req, res);
+						//...otherwise we've got our access_token
+						var body = JSON.parse(json);
 
+						//let's see if we've been instructed to get an identity
+						if (options.identity) {
+							identity.get(options.provider, body.access_token, function(err, profile) {
+								if (err) {
+									return callback(err, body, req, res);
+								}
+								body.profile = profile;
+								return callback(null, body, req, res);
+							});
+						}
+
+						//go ahead and callback if we're not async fetching an identity...
+						else {
+							return callback(null, body, req, res);
+						}
 					});
 			}
 			catch(err) {

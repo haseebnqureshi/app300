@@ -23,19 +23,20 @@ framework.db.connect(function(err) {
 
 	app.use(framework.flow.router({
 		provider: 'google',
+		identity: true,
 		authorize_url: 'https://accounts.google.com/o/oauth2/auth',
 		access_url: 'https://accounts.google.com/o/oauth2/token',
 		client_id: process.env.GOOGLE_CLIENT_ID,
 		client_secret: process.env.GOOGLE_CLIENT_SECRET,
 		redirect_uri: process.env.GOOGLE_REDIRECT_URI,
 		scope: [
-			'https://www.googleapis.com/auth/plus.login',
 			'https://www.googleapis.com/auth/userinfo.profile',
+			'https://www.googleapis.com/auth/userinfo.email',
 		].join(' '),
 		connect: function(err, data, req, res) {
 			return res.redirect(data.url);
 		}
-	}))
+	}));
 
 	app.get('/bearer-auth', framework.auth.bearerToken('users', 'tokens'), function(req, res) {
 		res.status(200).send({ 
