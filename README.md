@@ -1,4 +1,7 @@
 # app300
+![github license](https://img.shields.io/github/license/haseebnqureshi/app300.svg)
+![npm downloads](https://img.shields.io/npm/hq/app300.svg)
+
 Easily creating an application in under 5 minutes (or 300 seconds). Uses Vagrant and the AWS SDK to create and deploy a fully functioning application that is well architected, easily maintainable, and adheres to the twelve factor application.
 
 ### Getting Started
