@@ -6,207 +6,60 @@ var request = require('request');
 
 var _ = require('underscore');
 
-var path = require('path');
-
-var providers = require(path.resolve(__dirname, 'oauth2.json'));
-
 //@see https://aaronparecki.com/oauth-2-simplified/
 //@see https://github.com/simov/grant/blob/master/lib/flow/oauth2.js
 
-module.exports = function(express, app, db) {
+module.exports = function() {
 
-	var flowProvider = function(options) {
-		var options = options || {};
-		var providerName = options.provider;
-		var provider = providers[providerName] || {};
-		return provider;
-	};
-
-	var flowAuthorizeExceptions = function(params) {
-		return params;
-	};
-
-	var flowAuthorize = function(options) {
-		var options = options || {};
-		var provider = flowProvider(options);
-		var params = _.extend(provider, options);
-		params.state = '531be960-f6cc-4ab3-a7bf-e6e6575d9ad4';
-		params.response_type = 'code';
-		params.scope = params.scopes.join(provider.scope_delimiter);
-		params = flowAuthorizeExceptions(params);
-
-		//there may be number of extra params, so we whitelist what we know
-		params = _.pick(params, [
-			'response_type', 
-			'redirect_uri', 
+	var ensureAuthorizeOptions = function(options, custom_parameters /* arr */) {
+		var options = _.pick(options || {}, [
+			'response_type',
+			'redirect_uri',
 			'scope',
 			'state',
 			'client_id',
-			... provider.custom_parameters || []
+			... custom_parameters || []
 		]);
-
-		return provider.authorize_url + '?' + querystring.stringify(params);
+		if (!options.response_type) {
+			options.response_type = 'code';
+		}
+		if (!options.state) {
+			options.state = '531be960-f6cc-4ab3-a7bf-e6e6575d9ad4';
+		}
+		return options;
 	};
 
-	var flowAccess = function(options, callback) {
-		var options = options || {};
-		var provider = flowProvider(options);
+	var authorize = function(url, options, custom_parameters /* arr */) {
+		var params = ensureAuthorizeOptions(options, custom_parameters);
+		return url + '?' + querystring.stringify(params);
+	};
 
-		//only a set of params, statically setting our payload
-		request.post({
-			url: provider.access_url,
-			form: {
-				grant_type: 'authorization_code',
-				code: options.code,
-				redirect_uri: options.redirect_uri,
-				client_id: options.client_id,
-				client_secret: options.client_secret
-			}
-		}, function(error, httpResponse, body) {
-			callback(error, httpResponse, body);
+	var ensureAccessOptions = function(options) {
+		var options = _.pick(options || {}, [
+			'grant_type',
+			'code',
+			'redirect_uri',
+			'client_id',
+			'client_secret'
+		]);
+		if (!options.grant_type) {
+			options.grant_type = 'authorization_code';
+		}
+		return options;
+	};
+
+	var access = function(url, options, callback /* (err, body, response) */) {
+		var form = ensureAccessOptions(options || {});
+		request.post({ url, form }, function(error, httpResponse, body) {
+			return callback(error, body, httpResponse);
 		});
 	};
 
-	var connect = function(options) {
-		return function(req, res, next) {
-			var url = flowAuthorize(options || null);
-			res.status(200).send({ url });
-		};
-	};
-
-	var callback = function(options) {
-		var options = options || {};
-		return function(req, res, next) {
-
-			//ensuring we have a returned query
-			if (!req.query) { 
-				return res.status(500).send();
-			}
-
-			//next ensuring we have some code provided
-			options.code = req.query.code;
-			if (!options.code) {
-				return res.status(400).send({ message: 'No code provided to callback!' });
-			}
-
-			//matching our states, which right now are statically coded
-			var state = '531be960-f6cc-4ab3-a7bf-e6e6575d9ad4';
-			if (req.query.state !== state) {
-				return res.status(400).send({ message: 'State did not match from oAuth2 request to callback!' });
-			}
-
-			//finally, posting to receive our access token
-			flowAccess(options, function(error, httpResponse, body) {
-
-				//somehow our access token didn't work out
-				if (error) {
-					return res.status(500).send({ error });
-				}
-
-				//otherwise, persist what we've got back
-				var access_token = body.access_token;
-				var expries_in = body.expires_in;
-				var id_token = body.id_token;
-				var scope = body.scope;
-				var token_type = body.token_type;
-
-				res.status(200).send(body);
-			});
-		};
-	};
-
-	var detach = function(options) {
-		return function(req, res, next) {
-			res.status(500).send({ message: 'Not finished yet!' });
-		};
-	};
-
-	var router = function(options) {
-		var options = options || {};
-		var providerName = options.provider;
-		var rtr = express.Router();
-		rtr.route(`/connect/${providerName}`)
-			.get(connect(options));
-		rtr.route(`/connect/${providerName}/callback`)
-			.get(callback(options));
-		rtr.route(`/connect/${providerName}/detach`)
-			.get(detach(options));
-		return rtr;
-	};
-
 	return {
-		router,
-		flowProvider,
-		flowAuthorize,
-		flowAuthorizeExceptions,
-		connect,
-		callback,
-		detach
+		ensureAuthorizeOptions,
+		authorize,
+		ensureAccessOptions,
+		access
 	};
-
-
-
-	// var router = function(provider) {
-
-	// 	var authorizeUrl = 'https://accounts.google.com/o/oauth2/auth';
-	// 	var accessUrl = 'https://accounts.google.com/o/oauth2/token';
-	// 	var redirect_uri = process.env.GOOGLE_CALLBACK_URL;
-	// 	var client_id = process.env.GOOGLE_CLIENT_ID;
-	// 	var client_secret = process.env.GOOGLE_CLIENT_SECRET;
-	// 	var state = '531be960-f6cc-4ab3-a7bf-e6e6575d9ad4';
-
-	// 	app.get('/connect/google', function(req, res) {
-	// 		var url = authorizeUrl + '?' + querystring.stringify({
-	// 			response_type: 'code',
-	// 			client_id,
-	// 			redirect_uri,
-	// 			access_type: 'offline',
-	// 			scope: [
-	// 				'https://www.googleapis.com/auth/plus.login',
-	// 				'https://www.googleapis.com/auth/userinfo.profile',
-	// 			].join(' '),
-	// 			state
-	// 		});
-	// 		res.status(200).send({ url });
-	// 	});
-
-
-	// 	app.get('/connect/google/callback', function(req, res) {
-
-	// 		if (!req.query) { 
-	// 			return res.status(500).send();
-	// 		}
-
-	// 		var code = req.query.code;
-
-	// 		if (req.query.state !== state) {
-	// 			return res.status(400).send({ message: 'State did not match from oAuth2 request to callback!' });
-	// 		}
-
-	// 		var accessArgs = {
-	// 			grant_type: 'authorization_code',
-	// 			code,
-	// 			redirect_uri,
-	// 			client_id,
-	// 			client_secret
-	// 		};
-
-	// 		unirest.post(accessUrl).send(accessArgs).end(function(response) {
-	// 			if (response.error) {
-	// 				return res.status(500).send({ error: response.error });
-	// 			}
-	// 			var body = response.body;
-	// 			var access_token = body.access_token;
-	// 			var expries_in = body.expires_in;
-	// 			var scope = body.scope;
-	// 			var token_type = body.token_type;
-
-	// 			res.status(200).send(body);
-
-	// 		});
-
-	// 	});
-
-	// };
 
 };

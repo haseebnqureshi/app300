@@ -20,6 +20,8 @@ var db = require(path.resolve(__dirname, 'db.js'))(
 	process.env.R_DATABASE || 'test'
 );
 
+var oauth2 = require(path.resolve(__dirname, 'oauth2.js'))();
+
 
 /* CONFIG & INITIAL VARS */
 
@@ -39,6 +41,8 @@ module.exports = {
 	app,
 
 	db,
+
+	oauth2,
 
 	config: function() {
 		this.app.use(bodyParser.json());
@@ -71,6 +75,6 @@ module.exports = {
 
 	auth: require(path.resolve(__dirname, 'auth.js'))(db),
 
-	oauth2: require(path.resolve(__dirname, 'oauth2.js'))(express, app, db)
+	flow: require(path.resolve(__dirname, 'flow.js'))(oauth2, express)
 
 };
