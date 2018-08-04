@@ -48,6 +48,13 @@ var copyStartingFiles = function() {
 	fs.copySync(path.resolve(packageDir, 'app/package.json'), path.resolve(projectDir, 'app/package.json'));
 };
 
+var copyAppStartingDirectories = function() {
+	fs.ensureDirSync(path.resolve(projectDir, 'app/www'));
+	fs.ensureDirSync(path.resolve(projectDir, 'app/views'));
+	fs.copySync(path.resolve(packageDir, 'app/www'), path.resolve(projectDir, 'app/www'));
+	fs.copySync(path.resolve(packageDir, 'app/views'), path.resolve(projectDir, 'app/views'));
+};
+
 var installingPackages = function() {
 	execSync(`npm install ./database/_framework --loglevel=silent`);
 	execSync(`npm install ./api/_framework --loglevel=silent`);
@@ -90,6 +97,11 @@ var prompt = function() {
 			type: 'confirm',
 			name: 'startingFiles',
 			message: chalk.white(`\nAre you sure you want to copy all starting app300 framework files into your project? \nFor instance, any .env.example, index.js, package.json or files otherwise will be \ncompletely overwritten and lost forever. (Only do so if you've got everything \ncommitted and versioned.\n`)
+		},
+		{
+			type: 'confirm',
+			name: 'startingAppStartingDirectories',
+			message: chalk.white(`\nAre you sure you want to copy all starting app300 directories into your project? \n(We're talking about app/www and app/views directories, where your static files \nand pug templates live.\n`)
 		}
 	];
 
@@ -129,6 +141,18 @@ var prompt = function() {
 			);
 
 			copyStartingFiles();
+
+		}
+
+		if (answers.startingAppStartingDirectories === true) {
+
+			console.log(
+				  `\n` + chalk.gray(`| `)
+				+ `\n` + chalk.gray(`| `) + chalk.gray.bold(`Copying all starting application directories from app300 into your project...`)
+				+ `\n` + chalk.gray(`| `)
+			);
+
+			copyAppStartingDirectories();
 
 		}
 
