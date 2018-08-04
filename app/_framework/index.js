@@ -8,6 +8,10 @@ var _ = require('underscore');
 
 var express = require('express');
 
+var session = require('express-session');
+
+var flash = require('connect-flash');
+
 var app = express();
 
 app.info = require(path.resolve(__dirname, '..', 'package.json'));
@@ -35,6 +39,15 @@ module.exports = {
 	config: function() {
 		this.app.use(bodyParser.json());
 		this.app.use(bodyParser.urlencoded({ extended: false }));
+		this.app.set('view engine', 'pug');
+		this.app.set('views', path.resolve(__dirname, '..', 'views'));
+		this.app.use(express.static(path.resolve(__dirname, '..', 'www')));
+		this.app.use(session({
+			secret: 'app300',
+			resave: false,
+			saveUnitialized: true
+		}));
+		this.app(flash());
 	},
 
 	/*
@@ -60,3 +73,16 @@ module.exports = {
 	info: require(path.resolve(__dirname, 'package.json'))
 
 };
+
+
+// var paths = {
+// 	login: '/login',
+// 	register: '/register',
+// 	app: '/app',
+// 	logout: '/logout',
+// 	account: '/account',
+// 	authGoogle: '/auth/google',
+// 	authLocal: '/auth/local',
+// 	detachGoogle: '/detach/google'
+// };
+

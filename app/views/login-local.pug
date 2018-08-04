@@ -1,0 +1,16 @@
+html
+
+	- var title = "Login Local"
+	include head.pug
+
+	body
+		p= message
+		form(action='/login', method="POST")
+			div
+				label Username:
+				input(type="text", name="username")
+			div
+				label Password:
+				input(type="password", name="password")
+			div
+				input(type="submit", value="Log In")

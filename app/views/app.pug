@@ -1,0 +1,16 @@
+html
+
+	- var title = "App"
+	include head.pug
+
+	body
+		.uk-container.uk-section
+			h2 App
+			div
+				a(href= paths.account) Manage Account
+			div
+				a(href= paths.logout) Logout
+
+			if !user.google_id
+				div
+					a(href= paths.authGoogle) Connect your Google account
