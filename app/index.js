@@ -15,10 +15,4 @@ app.get('/', function(req, res) {
 	});
 });
 
-var i = 0;
-setInterval(function() {
-	console.log('app', i);
-	i++
-}, 10 * 1000);
-
 module.exports = framework.run(app);
